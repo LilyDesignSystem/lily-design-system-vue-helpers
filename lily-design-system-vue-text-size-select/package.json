@@ -1,7 +1,7 @@
 {
-  "name": "lily-design-system-vue-locale-select",
+  "name": "lily-design-system-vue-text-size-select",
   "version": "0.1.0",
-  "description": "Lily Design System - Vue 3 locale select",
+  "description": "Lily Design System - Vue 3 text size select",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -28,7 +28,7 @@
     "design",
     "system",
     "vue",
-    "locale",
+    "text-size",
     "select"
   ],
   "author": "joel@joelparkerhenderson.com",
