@@ -28,7 +28,7 @@ idioms (Composition API, `defineProps`, `defineModel`, `ref`,
 
 ## 1. Goal
 
-Give a Vue 3 application a drop-in, headless locale picker that:
+Give a Vue 3 application a drop-in, headless locale select that:
 
 1. Renders an accessible native `<select>` of available locales.
 2. **Applies the chosen locale** by setting `lang="…"` and
@@ -76,9 +76,9 @@ Give a Vue 3 application a drop-in, headless locale picker that:
   is the authoritative signal for current document language.
 - **The `dir` attribute is the secondary switch.** Setting `dir` on
   the document root is what causes browsers to mirror layout, scrollbar
-  position, and bidi text. The picker derives it from the locale.
+  position, and bidi text. The select derives it from the locale.
 - **BCP 47 hyphen form on the wire.** Locale codes are stored in the
-  consumer's array using whichever form they prefer. When the picker
+  consumer's array using whichever form they prefer. When the select
   writes to the DOM, it normalises to the BCP 47 hyphen form. The
   `v-model:value` mirrors back the original consumer form.
 - **TypeScript everywhere.** Public surface is fully typed via a
@@ -107,7 +107,7 @@ Give a Vue 3 application a drop-in, headless locale picker that:
 | `detectFromNavigator` | `boolean`                           | no       | `false`                  | Resolve `navigator.language` on first visit. |
 | `name`              | `string`                              | no       | `"locale"`               | `name` attribute of the `<select>`. |
 | `target`            | `HTMLElement \| null`                 | no       | `document.documentElement` | Element that receives `lang` and `dir`. |
-| `applyDir`          | `boolean`                             | no       | `true`                   | If false, the picker only writes `lang` and never touches `dir`. |
+| `applyDir`          | `boolean`                             | no       | `true`                   | If false, the select only writes `lang` and never touches `dir`. |
 | `localeLabels`      | `Record<string, string>`              | no       | `{}`                     | Optional pretty labels per locale code. |
 | `class`             | `string`                              | no       | `""`                     | Extra CSS class on the `<select>` root. |
 
@@ -116,7 +116,7 @@ Give a Vue 3 application a drop-in, headless locale picker that:
 | Event           | Payload          | Purpose                                                |
 | --------------- | ---------------- | ------------------------------------------------------ |
 | `update:value`  | `string`         | Emitted on selection (drives `v-model:value`).         |
-| `change`        | `string`         | Emitted after the picker applies a new locale (consumer-form code, not BCP 47). |
+| `change`        | `string`         | Emitted after the select applies a new locale (consumer-form code, not BCP 47). |
 
 ### 4.3 Slots
 
@@ -185,7 +185,7 @@ non-empty value of:
 3. `matchNavigatorLanguage(locales)` (only if `detectFromNavigator`).
 4. `defaultValue`.
 5. `"en"` if present in `locales`, else `locales[0]`.
-6. `""` (no apply happens — picker waits for user interaction).
+6. `""` (no apply happens — select waits for user interaction).
 
 Resolution emits `update:value` so consumers binding via
 `v-model:value` see the resolved value.
@@ -333,9 +333,9 @@ run under vitest + jsdom + `@vue/test-utils`.
 19. When `value` is supplied as a non-empty prop, the initial-value
     resolution skips storage, navigator detection, and defaults.
 20. When `detectFromNavigator` is true and `navigator.languages`
-    contains a supported locale, the picker resolves to that locale.
+    contains a supported locale, the select resolves to that locale.
 21. When `detectFromNavigator` is true and only a language-only match
-    is available, the picker resolves to the language-only locale.
+    is available, the select resolves to the language-only locale.
 
 ### 7.5 Spread + custom slot (mirrors §4.1, §4.3)
 
@@ -363,5 +363,5 @@ run under vitest + jsdom + `@vue/test-utils`.
 - License: MIT or Apache-2.0 or GPL-2.0 or GPL-3.0 or BSD-3-Clause
   (or contact for other terms)
 - Contact: Joel Parker Henderson &lt;joel@joelparkerhenderson.com&gt;
-- Canonical locale list: [locales.tsv](./locales.tsv) — 436 codes
+- Canonical locale list: [locales.tsv](../locales.tsv) — 436 codes
   with English names

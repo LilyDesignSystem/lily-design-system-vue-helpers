@@ -29,7 +29,7 @@ lifecycle.
 
 ## 1. Goal
 
-Give a Vue 3 application a drop-in, headless theme picker that:
+Give a Vue 3 application a drop-in, headless theme select that:
 
 1. Renders an accessible native `<select>` of available themes.
 2. **Loads themes dynamically at runtime** from a developer-specified
@@ -59,11 +59,11 @@ Give a Vue 3 application a drop-in, headless theme picker that:
 
 ## 3. Architectural decisions
 
-- **One `<link>` per picker name.** Switching themes mutates `href`
+- **One `<link>` per select name.** Switching themes mutates `href`
   on a single `<link rel="stylesheet"
   data-lily-theme-select="{name}">`. Only the active theme is
   fetched; previously-active CSS is unloaded when the href changes.
-  Multiple pickers can coexist by passing distinct `name` props.
+  Multiple selects can coexist by passing distinct `name` props.
 - **`data-theme` attribute is the activation switch.** Theme CSS
   files scope their `:root[data-theme="slug"]` rules so authors can
   preload multiple themes (one `<link>` per theme) and switch with
@@ -104,7 +104,7 @@ Give a Vue 3 application a drop-in, headless theme picker that:
 | Event           | Payload          | Purpose                                                |
 | --------------- | ---------------- | ------------------------------------------------------ |
 | `update:value`  | `string`         | Emitted on selection (drives `v-model:value`).         |
-| `change`        | `string`         | Emitted after the picker applies a new theme.          |
+| `change`        | `string`         | Emitted after the select applies a new theme.          |
 
 ### 4.3 Slots
 
@@ -130,7 +130,7 @@ type SlotArgs = {
   value="{slug}">{labelFor(slug)}</option>` per theme slug. The
   active slug is bound via `v-model` on the `<select>`.
 - `labelFor(slug)` returns `themeLabels[slug]` when supplied;
-  otherwise the slug with its first character upper-cased. The picker
+  otherwise the slug with its first character upper-cased. The select
   never emits the word "default".
 - A single managed `<link rel="stylesheet"
   data-lily-theme-select="{name}">` in `document.head`. Created on
@@ -168,7 +168,7 @@ non-empty value of:
 3. `defaultValue`.
 4. `"light"` (if `"light"` is in `themes`).
 5. `themes[0]`.
-6. `""` (no apply happens — picker waits for user interaction).
+6. `""` (no apply happens — select waits for user interaction).
 
 Resolution emits `update:value` so consumers binding via
 `v-model:value` see the resolved value.

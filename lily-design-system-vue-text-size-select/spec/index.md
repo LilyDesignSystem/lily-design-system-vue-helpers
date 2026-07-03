@@ -68,9 +68,9 @@ emit `change(slug)`. Initial value resolves `value` > storage >
 `defaultValue` > `"medium"` (if present) > `sizes[0]`. SSR-safe — all
 DOM writes happen inside `onMounted` / `watch`.
 
-An internal `current` ref is the source of truth so the picker works
+An internal `current` ref is the source of truth so the select works
 both controlled (consumer drives `v-model:value`) and uncontrolled
-(no binding — the picker resolves and applies a default itself). A
+(no binding — the select resolves and applies a default itself). A
 `watch(() => props.value, …)` mirrors external changes into `current`;
 a `watch(current, …)` applies.
 
