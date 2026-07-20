@@ -1,5 +1,5 @@
 <!--
-    04. RTL demo — Arabic, Hebrew, Persian, Urdu, Pashto.
+    RTL demo — Arabic, Hebrew, Persian, Urdu, Pashto.
 
     Visualises the select's auto-detection in action. Switching to any
     of the RTL locales writes `dir="rtl"` to <html> and the entire

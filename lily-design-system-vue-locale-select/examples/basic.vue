@@ -1,30 +1,33 @@
 <!--
-    01. Default native <select> rendering.
+    Default rendering.
 
-    The simplest possible mount. The select renders a native
-    `<select>` with one `<option>` per locale, each option showing its
-    locale's pretty name (from the built-in `locales.tsv` table). Each
-    `<option>` carries `lang="…"` so screen readers pronounce the name
-    in the right language.
+    The simplest possible mount. The component renders a
+    <div class="locale-select"> holding a hidden input, a
+    <button class="locale-select-button"> showing the globe glyph
+    (🌐, U+1F310), and a <ul class="locale-select-list" role="listbox">
+    with one <li class="locale-select-option" role="option"> per locale,
+    each showing its locale's pretty name (from the built-in
+    `locales.tsv` table). Each option carries `lang="…"` so screen
+    readers pronounce the name in the right language.
 
-    Outcome: a `<select>` with three `<option>` elements. Picking one
-    writes `<html lang="…" dir="…">` and updates the bindable `value`.
+    Outcome: a compact globe button. Opening it lists three locales;
+    picking one writes `<html lang="…" dir="…">` and updates the
+    bindable `value`.
 
     The status line is part of the basic pattern, not an add-on.
     ------------------------------------------------------------------
-    The closed <select> is placeholder-pinned: it always reads the
-    placeholder word, never "French". That keeps the control narrow no
-    matter how long the locale names are, but it means a screen-reader
-    user never hears the active locale announced as the combobox value.
-    The <p class="locale-select-status"> below is the compensating
-    channel, and it is the default pattern this package ships — see
+    The control is icon-only: the closed button shows a glyph and
+    nothing else, so the active locale has no on-screen representation
+    and is not announced as any control's value. The
+    <p class="locale-select-status"> below is the compensating channel,
+    and it is the default pattern this package ships — see
     ../docs/accessibility.md.
 
     Two details worth copying verbatim:
 
-    - It is VISIBLE, not sr-only. Sighted users benefit too: the active
-      locale is otherwise invisible once the control snaps back to the
-      placeholder, which matters for cognitive accessibility. If your
+    - It is VISIBLE, not sr-only. Sighted users benefit too: with only a
+      glyph on the closed button, the active locale is otherwise
+      invisible, which matters for cognitive accessibility. If your
       design genuinely cannot spare the line, hide it with a
       visually-hidden (clip-path) rule rather than deleting it —
       `display: none` would silence the live region entirely.

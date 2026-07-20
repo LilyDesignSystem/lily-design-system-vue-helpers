@@ -1,5 +1,5 @@
 <!--
-    07. Wiring Paraglide JS (Inlang) — Vue 3.
+    Wiring Paraglide JS (Inlang) — Vue 3.
 
     Paraglide compiles each translation to a tree-shakeable function.
     Locale is set via `setLocale()` and read via `getLocale()`. The

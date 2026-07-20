@@ -1,5 +1,5 @@
 <!--
-    09. Scoped target — change locale of one region, not the whole page.
+    Scoped target — change locale of one region, not the whole page.
 
     Useful for multilingual content panels: a single page with three
     cards each in a different language. Pass `:target="panelRef"` so

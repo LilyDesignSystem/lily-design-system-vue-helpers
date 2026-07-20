@@ -1,5 +1,5 @@
 <!--
-    06. Wiring vue-i18n (Intlify).
+    Wiring vue-i18n (Intlify).
 
     The select's bindable `value` is mirrored into vue-i18n's `locale`
     ref via the `change` event. Every `$t("key")` / `t("key")` call

@@ -1,5 +1,5 @@
 <!--
-    08. Nuxt 3 SSR with cookie persistence (useCookie).
+    Nuxt 3 SSR with cookie persistence (useCookie).
 
     No flash of default locale: the server reads the cookie, fills
     `<html lang dir>` via useHead, and seeds the select with `value`.
