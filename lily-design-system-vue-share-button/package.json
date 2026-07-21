@@ -1,7 +1,7 @@
 {
-  "name": "lily-design-system-vue-text-size-select",
-  "version": "0.2.0",
-  "description": "Lily Design System - Vue 3 text size select",
+  "name": "lily-design-system-vue-share-button",
+  "version": "0.1.0",
+  "description": "Lily Design System - Vue 3 share button",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -28,8 +28,10 @@
     "design",
     "system",
     "vue",
-    "text-size",
-    "select"
+    "share",
+    "button",
+    "clipboard",
+    "web-share"
   ],
   "author": "joel@joelparkerhenderson.com",
   "license": "MIT"
