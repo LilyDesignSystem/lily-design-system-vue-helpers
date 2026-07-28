@@ -6,7 +6,7 @@
  * candidate — U+1F5DB DECREASE FONT SIZE SYMBOL — has no real glyph in
  * common font stacks and falls back to a crude bitmap shape, and it
  * means *decrease* rather than *size*. "A" renders in the page's own
- * font on every platform, stays monochrome like theme-chooser's ◑, and
+ * font on every platform, stays monochrome like theme-picker's ◑, and
  * is the conventional text-size affordance.
  */
 export const LATIN_CAPITAL_LETTER_A = "A";
@@ -24,7 +24,7 @@ export type SlotArgs = {
 /** Alias matching the canonical Svelte helper's type name. */
 export type ChildArgs = SlotArgs;
 
-/** Public props for TextSizeChooser. See `spec/index.md` §4 for the contract. */
+/** Public props for TextSizePicker. See `spec/index.md` §4 for the contract. */
 export type Props = {
     /** Accessible name for the button and the listbox. */
     label: string;
@@ -49,7 +49,7 @@ export type Props = {
 /**
  * Resolve a size slug to its display label: each hyphen-separated word
  * title-cased, so "x-large" renders as "X Large". Mirrors `themeName`
- * in theme-chooser and `localeName` in locale-chooser.
+ * in theme-picker and `localeName` in locale-picker.
  */
 export function sizeName(size: string): string {
     return size
@@ -60,9 +60,9 @@ export function sizeName(size: string): string {
 
 let uid = 0;
 /** Stable per-instance id prefix; SSR-safe (no Math.random / Date.now). */
-export function nextTextSizeChooserId(): string {
+export function nextTextSizePickerId(): string {
     uid += 1;
-    return `text-size-chooser-${uid}`;
+    return `text-size-picker-${uid}`;
 }
 </script>
 
@@ -84,7 +84,7 @@ const emit = defineEmits<{
     (event: "change", value: string): void;
 }>();
 
-const baseId = nextTextSizeChooserId();
+const baseId = nextTextSizePickerId();
 const listId = `${baseId}-list`;
 const optionId = (i: number) => `${baseId}-option-${i}`;
 
@@ -321,7 +321,7 @@ onBeforeUnmount(() => {
 <template>
     <div
         ref="rootEl"
-        :class="`text-size-chooser ${props.class}`.trim()"
+        :class="`text-size-picker ${props.class}`.trim()"
         @focusout="onRootFocusOut"
     >
         <input type="hidden" :name="name" :value="current" />
@@ -329,7 +329,7 @@ onBeforeUnmount(() => {
         <button
             ref="buttonEl"
             type="button"
-            class="text-size-chooser-button"
+            class="text-size-picker-button"
             :aria-label="label"
             aria-haspopup="listbox"
             :aria-expanded="open ? 'true' : 'false'"
@@ -338,7 +338,7 @@ onBeforeUnmount(() => {
             @keydown="onButtonKeydown"
         >
             <slot v-bind="{ value: current, open, labelFor }">
-                <span class="text-size-chooser-icon" aria-hidden="true">{{
+                <span class="text-size-picker-icon" aria-hidden="true">{{
                     LATIN_CAPITAL_LETTER_A
                 }}</span>
             </slot>
@@ -346,7 +346,7 @@ onBeforeUnmount(() => {
 
         <ul
             ref="listEl"
-            class="text-size-chooser-list"
+            class="text-size-picker-list"
             :id="listId"
             role="listbox"
             :aria-label="label"
@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
             <li
                 v-for="(size, i) in sizes"
                 :key="size"
-                class="text-size-chooser-option"
+                class="text-size-picker-option"
                 :id="optionId(i)"
                 role="option"
                 :aria-selected="size === current ? 'true' : 'false'"

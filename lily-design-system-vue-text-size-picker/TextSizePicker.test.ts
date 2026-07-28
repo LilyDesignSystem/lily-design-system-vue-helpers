@@ -2,7 +2,7 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { defineComponent, nextTick, ref } from "vue";
 
-import TextSizeChooser, { sizeName } from "./TextSizeChooser.vue";
+import TextSizePicker, { sizeName } from "./TextSizePicker.vue";
 
 const SIZES = ["small", "medium", "large", "x-large"];
 /** Index of "medium" — the default initial value, so the default active option. */
@@ -18,7 +18,7 @@ async function flush(): Promise<void> {
 const wrappers: VueWrapper<any>[] = [];
 
 function build(props: Record<string, unknown> = {}, options: Record<string, unknown> = {}) {
-    const wrapper = mount(TextSizeChooser, {
+    const wrapper = mount(TextSizePicker, {
         props: { label: "Text size", sizes: SIZES, ...props },
         attachTo: document.body,
         ...options,
@@ -29,9 +29,9 @@ function build(props: Record<string, unknown> = {}, options: Record<string, unkn
 
 function parts(wrapper: VueWrapper<any>) {
     return {
-        button: wrapper.find("button.text-size-chooser-button"),
-        list: wrapper.find("ul.text-size-chooser-list"),
-        options: wrapper.findAll("li.text-size-chooser-option"),
+        button: wrapper.find("button.text-size-picker-button"),
+        list: wrapper.find("ul.text-size-picker-list"),
+        options: wrapper.findAll("li.text-size-picker-option"),
     };
 }
 
@@ -54,7 +54,7 @@ afterEach(() => {
     resetRoot();
 });
 
-describe("TextSizeChooser — pure helpers", () => {
+describe("TextSizePicker — pure helpers", () => {
     test("sizeName title-cases each hyphen-separated word", () => {
         expect(sizeName("x-large")).toBe("X Large");
         expect(sizeName("medium")).toBe("Medium");
@@ -77,7 +77,7 @@ async function pick(
     await options[sizes.indexOf(slug)].trigger("click");
 }
 
-describe("TextSizeChooser — markup contract (§4.2, §7.1–§7.5)", () => {
+describe("TextSizePicker — markup contract (§4.2, §7.1–§7.5)", () => {
     test("§7.1 renders a button that controls a listbox", () => {
         const wrapper = build();
         const { button } = parts(wrapper);
@@ -93,13 +93,13 @@ describe("TextSizeChooser — markup contract (§4.2, §7.1–§7.5)", () => {
     test("§7.1 the root is a div carrying the class hook", () => {
         const wrapper = build({ class: "my-hook" });
         expect(wrapper.element.tagName).toBe("DIV");
-        expect(wrapper.classes()).toContain("text-size-chooser");
+        expect(wrapper.classes()).toContain("text-size-picker");
         expect(wrapper.classes()).toContain("my-hook");
     });
 
     test("§7.1 the button renders the letter-A glyph, hidden from assistive tech", () => {
         const wrapper = build();
-        const icon = wrapper.find(".text-size-chooser-icon");
+        const icon = wrapper.find(".text-size-picker-icon");
         // U+0041 LATIN CAPITAL LETTER A — a real glyph in every font stack,
         // unlike U+1F5DB DECREASE FONT SIZE SYMBOL.
         expect(icon.text()).toBe("A");
@@ -169,7 +169,7 @@ describe("TextSizeChooser — markup contract (§4.2, §7.1–§7.5)", () => {
     });
 });
 
-describe("TextSizeChooser — keyboard contract (APG listbox)", () => {
+describe("TextSizePicker — keyboard contract (APG listbox)", () => {
     async function openWith(key: string, props: Record<string, unknown> = {}) {
         const wrapper = build(props);
         await flush();
@@ -354,7 +354,7 @@ describe("TextSizeChooser — keyboard contract (APG listbox)", () => {
     });
 });
 
-describe("TextSizeChooser — size application (§5, §7.6–§7.10)", () => {
+describe("TextSizePicker — size application (§5, §7.6–§7.10)", () => {
     test("§7.6 initial value defaults to medium when present", async () => {
         build();
         await flush();
@@ -391,14 +391,14 @@ describe("TextSizeChooser — size application (§5, §7.6–§7.10)", () => {
 
     test("§7.8 selecting an option updates data-text-size and emits change", async () => {
         const Host = defineComponent({
-            components: { TextSizeChooser },
+            components: { TextSizePicker },
             setup() {
                 const size = ref("medium");
                 const changes: string[] = [];
                 return { size, changes };
             },
             template: `
-                <TextSizeChooser
+                <TextSizePicker
                     label="Text size"
                     :sizes="['small', 'medium', 'large', 'x-large']"
                     v-model:value="size"
@@ -409,8 +409,8 @@ describe("TextSizeChooser — size application (§5, §7.6–§7.10)", () => {
         const wrapper = mount(Host, { attachTo: document.body });
         wrappers.push(wrapper);
         await flush();
-        await wrapper.find("button.text-size-chooser-button").trigger("click");
-        await wrapper.findAll("li.text-size-chooser-option")[3].trigger("click");
+        await wrapper.find("button.text-size-picker-button").trigger("click");
+        await wrapper.findAll("li.text-size-picker-option")[3].trigger("click");
         await flush();
         expect(document.documentElement.getAttribute("data-text-size")).toBe("x-large");
         expect((wrapper.vm as any).changes).toContain("x-large");
@@ -450,7 +450,7 @@ describe("TextSizeChooser — size application (§5, §7.6–§7.10)", () => {
     });
 });
 
-describe("TextSizeChooser — spread + custom slot (§7.12–§7.13)", () => {
+describe("TextSizePicker — spread + custom slot (§7.12–§7.13)", () => {
     test("§7.12 extra attributes spread onto the root div", () => {
         const wrapper = build({}, { attrs: { "data-testid": "ts" } });
         expect(wrapper.element.tagName).toBe("DIV");
@@ -472,10 +472,10 @@ describe("TextSizeChooser — spread + custom slot (§7.12–§7.13)", () => {
         );
         await flush();
         // The custom glyph replaces the default "A" inside the button.
-        expect(wrapper.find("button.text-size-chooser-button").text()).toContain(
+        expect(wrapper.find("button.text-size-picker-button").text()).toContain(
             "custom glyph",
         );
-        expect(wrapper.find(".text-size-chooser-icon").exists()).toBe(false);
+        expect(wrapper.find(".text-size-picker-icon").exists()).toBe(false);
         expect(captured.open).toBe(false);
         expect(captured.value).toBe("large");
         expect(captured.labelFor("x-large")).toBe("X Large");
@@ -495,7 +495,7 @@ describe("TextSizeChooser — spread + custom slot (§7.12–§7.13)", () => {
             },
         );
         await flush();
-        await wrapper.find("button.text-size-chooser-button").trigger("click");
+        await wrapper.find("button.text-size-picker-button").trigger("click");
         await flush();
         expect(seen[0]).toBe(false);
         expect(seen[seen.length - 1]).toBe(true);

@@ -4,8 +4,8 @@
  *
  * An in-font arrow rather than a pictograph, matching the other helpers'
  * rule: it renders in the page's own font on every platform and stays
- * monochrome alongside theme-chooser's ◑, locale-chooser's 🌐 and
- * text-size-chooser's "A".
+ * monochrome alongside theme-picker's ◑, locale-picker's 🌐 and
+ * text-size-picker's "A".
  */
 export const BLACK_RIGHTWARDS_ARROWHEAD = "\u27A4";
 
@@ -41,7 +41,7 @@ export type ChildArgs = SlotArgs;
 /** How the button behaves when activated. */
 export type ShareStrategy = "auto" | "native" | "list";
 
-/** Public props for ShareChooser. See `spec/index.md` §4 for the contract. */
+/** Public props for SharePicker. See `spec/index.md` §4 for the contract. */
 export type Props = {
     /** Accessible name for the button and the list. */
     label: string;
@@ -88,9 +88,9 @@ export function canCopy(): boolean {
 
 let uid = 0;
 /** Stable per-instance id prefix; SSR-safe (no Math.random / Date.now). */
-export function nextShareChooserId(): string {
+export function nextSharePickerId(): string {
     uid += 1;
-    return `share-chooser-${uid}`;
+    return `share-picker-${uid}`;
 }
 </script>
 
@@ -117,7 +117,7 @@ const emit = defineEmits<{
     (event: "nativeShare", url: string): void;
 }>();
 
-const baseId = nextShareChooserId();
+const baseId = nextSharePickerId();
 const listId = `${baseId}-list`;
 
 const open = ref(false);
@@ -141,7 +141,7 @@ function items(): HTMLElement[] {
     if (!listEl.value) return [];
     return Array.from(
         listEl.value.querySelectorAll<HTMLElement>(
-            ".share-chooser-target, .share-chooser-copy",
+            ".share-picker-target, .share-picker-copy",
         ),
     );
 }
@@ -292,13 +292,13 @@ onBeforeUnmount(() => {
 <template>
     <div
         ref="rootEl"
-        :class="`share-chooser ${props.class}`.trim()"
+        :class="`share-picker ${props.class}`.trim()"
         @focusout="onRootFocusOut"
     >
         <button
             ref="buttonEl"
             type="button"
-            class="share-chooser-button"
+            class="share-picker-button"
             :aria-label="label"
             :aria-expanded="open ? 'true' : 'false'"
             :aria-controls="listId"
@@ -306,7 +306,7 @@ onBeforeUnmount(() => {
             @keydown="onButtonKeydown"
         >
             <slot v-bind="{ open, url: currentUrl() }">
-                <span class="share-chooser-icon" aria-hidden="true">{{
+                <span class="share-picker-icon" aria-hidden="true">{{
                     BLACK_RIGHTWARDS_ARROWHEAD
                 }}</span>
             </slot>
@@ -314,7 +314,7 @@ onBeforeUnmount(() => {
 
         <ul
             ref="listEl"
-            class="share-chooser-list"
+            class="share-picker-list"
             :id="listId"
             :hidden="open ? undefined : true"
             @keydown="onListKeydown"
@@ -322,13 +322,13 @@ onBeforeUnmount(() => {
             <li
                 v-for="target in targets"
                 :key="target.id"
-                class="share-chooser-list-item"
+                class="share-picker-list-item"
             >
                 <!-- A real link, not role="menuitem": these ARE navigation,
                      and menuitem would strip middle-click, open-in-new-tab
                      and copy-link-address. -->
                 <a
-                    class="share-chooser-target"
+                    class="share-picker-target"
                     :data-target-id="target.id"
                     :href="target.href(currentUrl(), title, text)"
                     :target="target.newTab === false ? undefined : '_blank'"
@@ -337,8 +337,8 @@ onBeforeUnmount(() => {
                 >{{ target.label }}</a>
             </li>
 
-            <li v-if="copyLabel" class="share-chooser-list-item">
-                <button type="button" class="share-chooser-copy" @click="copyUrl">
+            <li v-if="copyLabel" class="share-picker-list-item">
+                <button type="button" class="share-picker-copy" @click="copyUrl">
                     {{ copyLabel }}
                 </button>
             </li>
@@ -347,6 +347,6 @@ onBeforeUnmount(() => {
         <!-- Copying gives no visual feedback of its own, so the outcome is
              announced. Empty until something happens, so it stays silent on
              load; aria-live announces mutations only. -->
-        <p class="share-chooser-status" aria-live="polite">{{ status }}</p>
+        <p class="share-picker-status" aria-live="polite">{{ status }}</p>
     </div>
 </template>

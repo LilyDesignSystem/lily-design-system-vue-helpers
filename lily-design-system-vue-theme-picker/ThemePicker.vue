@@ -1,127 +1,93 @@
 <script lang="ts">
-import {
-    defaultLocaleLabels,
-    RTL_LANGUAGE_TAGS,
-    RTL_SCRIPT_SUBTAGS,
-} from "./locales.js";
-
-/**
- * Default button glyph: U+1F310 GLOBE WITH MERIDIANS followed by
- * U+FE0E VARIATION SELECTOR-15.
- *
- * VS15 requests *text* presentation. Without it the browser picks the
- * colour-emoji font and the globe renders blue, which does not match
- * theme-chooser's monochrome ◑ — the two controls sit next to each
- * other in a page header and should read as one set.
- */
-export const GLOBE_WITH_MERIDIANS = "\u{1F310}\uFE0E";
+/** Default button glyph: U+25D1 CIRCLE WITH RIGHT HALF BLACK. */
+export const CIRCLE_WITH_RIGHT_HALF_BLACK = "\u25D1";
 
 /** Arguments passed to the default scoped slot (the button glyph). */
 export type SlotArgs = {
-    /** Currently selected locale code (consumer form, not BCP 47-normalised). */
+    /** Currently selected theme slug. */
     value: string;
     /** Is the listbox open? */
     open: boolean;
-    /** Resolve a locale code to its display label. */
-    labelFor: (locale: string) => string;
+    /** Resolve a slug to its display label. */
+    labelFor: (theme: string) => string;
 };
 
 /** Alias matching the canonical Svelte helper's type name. */
 export type ChildArgs = SlotArgs;
 
-/** Public props for LocaleChooser. See `spec/index.md` §4 for the contract. */
+/** Public props for ThemePicker. See `spec/index.md` §4 for the contract. */
 export type Props = {
     /** Accessible name for the button and the listbox. */
     label: string;
-    /** Available locale codes. */
-    locales: string[];
-    /** Currently selected locale code. Two-way bindable via v-model:value. */
+    /** Base URL of the themes directory, e.g. "/assets/themes/". */
+    themesUrl: string;
+    /** Available theme slugs. */
+    themes: string[];
+    /** Currently selected theme slug. Two-way bindable via v-model:value. */
     value?: string;
-    /** Initial locale when nothing else is supplied. */
+    /** Initial theme when nothing else is supplied. */
     defaultValue?: string;
     /** If set, persist the selection to localStorage under this key. */
     storageKey?: string;
-    /** Resolve `navigator.languages` to a supported locale on first visit. */
-    detectFromNavigator?: boolean;
-    /** `name` of the hidden input that carries the value in a form. */
+    /** Resolve `prefers-color-scheme` to a supported theme on first visit. */
+    detectFromSystem?: boolean;
+    /** Discriminates the managed <link>; also the hidden input's `name`. */
     name?: string;
-    /** Element that receives `lang` and `dir`. Defaults to document.documentElement. */
+    /** File extension appended to each slug when constructing the URL. */
+    extension?: string;
+    /** Element that receives `data-theme`. Defaults to document.documentElement. */
     target?: HTMLElement | null;
-    /** If false, the select only writes `lang` and never touches `dir`. */
-    applyDir?: boolean;
-    /** Optional pretty labels per locale code. */
-    localeLabels?: Record<string, string>;
+    /** Optional pretty labels per slug. */
+    themeLabels?: Record<string, string>;
     /** Extra CSS class on the root element. */
     class?: string;
 };
 
-// ---------------------------------------------------------------
-// Pure helpers (exported so consumers can reuse them)
-// ---------------------------------------------------------------
-
-/** Convert a locale code to its BCP 47 hyphen form. */
-export function bcp47LocaleTag(locale: string): string {
-    return locale.replace(/_/g, "-");
+/**
+ * Resolve a theme slug to its display label: each hyphen-separated
+ * word title-cased, so a slug like
+ * "united-kingdom-national-health-service-england-for-patients"
+ * renders as "United Kingdom National Health Service England For
+ * Patients". Mirrors `localeName` in locale-picker.
+ */
+export function themeName(theme: string): string {
+    return theme
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
 }
 
-/** Detect whether a locale is right-to-left. See spec/index.md §5.6. */
-export function isRtlLocale(locale: string): boolean {
-    if (!locale) return false;
-    const parts = locale.split(/[-_]/);
-    for (const part of parts) {
-        if (RTL_SCRIPT_SUBTAGS.has(part.toLowerCase())) return true;
-    }
-    const base = parts[0]?.toLowerCase() ?? "";
-    return RTL_LANGUAGE_TAGS.has(base);
-}
-
-/** Resolve a locale code to its English name via the built-in table. */
-export function localeName(locale: string): string {
-    return defaultLocaleLabels[locale] ?? locale;
-}
-
-/** Re-export the built-in label table and RTL sets for convenience. */
-export { defaultLocaleLabels, RTL_LANGUAGE_TAGS, RTL_SCRIPT_SUBTAGS };
-
-/** Opportunistic Intl.DisplayNames lookup; never throws. */
-function intlDisplayName(locale: string): string {
-    try {
-        const env =
-            typeof navigator !== "undefined" && navigator.language
-                ? navigator.language
-                : "en";
-        const dn = new Intl.DisplayNames([env], { type: "language" });
-        return dn.of(bcp47LocaleTag(locale)) ?? "";
-    } catch {
+/**
+ * Resolve the OS colour-scheme preference to a supported theme slug.
+ * Mirrors `matchNavigatorLanguage` in locale-picker. Returns "" when
+ * the preferred scheme is not in `themes`, or when matchMedia is
+ * unavailable (SSR — jsdom does not implement it either).
+ */
+export function matchSystemTheme(themes: readonly string[]): string {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
         return "";
     }
+    const wanted = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    return themes.includes(wanted) ? wanted : "";
 }
 
-/** Match a navigator preference against a supported-locales list. */
-export function matchNavigatorLanguage(
-    navLangs: readonly string[],
-    locales: readonly string[],
-): string | "" {
-    const lc = (s: string) => s.toLowerCase().replace(/_/g, "-");
-    const localesLc = locales.map(lc);
-    for (const raw of navLangs) {
-        const nav = lc(raw);
-        const exactIndex = localesLc.indexOf(nav);
-        if (exactIndex !== -1) return locales[exactIndex];
-        const navBase = nav.split("-")[0];
-        for (let i = 0; i < locales.length; i++) {
-            const base = localesLc[i].split("-")[0];
-            if (base === navBase) return locales[i];
-        }
-    }
-    return "";
+/** Normalise the themes directory URL to end with exactly one "/". */
+export function normaliseThemesUrl(themesUrl: string): string {
+    return themesUrl.endsWith("/") ? themesUrl : themesUrl + "/";
+}
+
+/** Construct the href for a given theme slug. */
+export function themeHref(themesUrl: string, slug: string, extension: string): string {
+    return normaliseThemesUrl(themesUrl) + slug + extension;
 }
 
 let uid = 0;
 /** Stable per-instance id prefix; SSR-safe (no Math.random / Date.now). */
-export function nextLocaleChooserId(): string {
+export function nextThemePickerId(): string {
     uid += 1;
-    return `locale-chooser-${uid}`;
+    return `theme-picker-${uid}`;
 }
 </script>
 
@@ -132,11 +98,11 @@ const props = withDefaults(defineProps<Props>(), {
     value: "",
     defaultValue: undefined,
     storageKey: undefined,
-    detectFromNavigator: false,
-    name: "locale",
+    detectFromSystem: false,
+    name: "theme",
+    extension: ".css",
     target: undefined,
-    applyDir: true,
-    localeLabels: () => ({}),
+    themeLabels: () => ({}),
     class: "",
 });
 
@@ -145,7 +111,7 @@ const emit = defineEmits<{
     (event: "change", value: string): void;
 }>();
 
-const baseId = nextLocaleChooserId();
+const baseId = nextThemePickerId();
 const listId = `${baseId}-list`;
 const optionId = (i: number) => `${baseId}-option-${i}`;
 
@@ -159,44 +125,46 @@ const rootEl = ref<HTMLDivElement | null>(null);
 let typeahead = "";
 let typeaheadTimer: ReturnType<typeof setTimeout> | undefined;
 
-function labelFor(locale: string): string {
-    const overrides = props.localeLabels ?? {};
-    if (locale in overrides) return overrides[locale];
-    if (locale in defaultLocaleLabels) return defaultLocaleLabels[locale];
-    const intl = intlDisplayName(locale);
-    if (intl) return intl;
-    return locale;
+function labelFor(theme: string): string {
+    const labels = props.themeLabels ?? {};
+    if (theme in labels) return labels[theme];
+    return themeName(theme);
 }
 
-function tagFor(locale: string): string {
-    return bcp47LocaleTag(locale);
-}
-
-function applyLocale(code: string): void {
-    if (typeof document === "undefined" || !code) return;
-    const root = props.target ?? document.documentElement;
-    root.setAttribute("lang", bcp47LocaleTag(code));
-    if (props.applyDir) {
-        root.setAttribute("dir", isRtlLocale(code) ? "rtl" : "ltr");
+function getManagedLink(): HTMLLinkElement {
+    const selector = `link[data-lily-theme-picker="${props.name}"]`;
+    let link = document.head.querySelector<HTMLLinkElement>(selector);
+    if (!link) {
+        link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.setAttribute("data-lily-theme-picker", props.name);
+        document.head.appendChild(link);
     }
+    return link;
+}
+
+function applyTheme(slug: string): void {
+    if (typeof document === "undefined" || !slug) return;
+    getManagedLink().href = themeHref(props.themesUrl, slug, props.extension);
+    (props.target ?? document.documentElement).setAttribute("data-theme", slug);
     if (props.storageKey) {
         try {
-            localStorage.setItem(props.storageKey, code);
+            localStorage.setItem(props.storageKey, slug);
         } catch {
             // ignore quota / privacy errors
         }
     }
-    emit("change", code);
+    emit("change", slug);
 }
 
 // Internal source of truth so the select works both controlled
 // (consumer drives `v-model:value`) and uncontrolled (no binding —
-// the select resolves and applies a default itself, per spec §7.4).
+// the select resolves and applies a default itself, per spec §7.6).
 const current = ref(props.value ?? "");
 
-function setLocale(code: string): void {
-    current.value = code;
-    emit("update:value", code);
+function setTheme(slug: string): void {
+    current.value = slug;
+    emit("update:value", slug);
 }
 
 // Mirror an externally-controlled `value` into internal state.
@@ -209,7 +177,7 @@ watch(
 
 // Apply whenever the resolved value changes.
 watch(current, (next, prev) => {
-    if (next && next !== prev) applyLocale(next);
+    if (next && next !== prev) applyTheme(next);
 });
 
 // ---------------------------------------------------------------
@@ -217,7 +185,7 @@ watch(current, (next, prev) => {
 // ---------------------------------------------------------------
 
 async function openList(startIndex?: number): Promise<void> {
-    const selected = props.locales.indexOf(current.value);
+    const selected = props.themes.indexOf(current.value);
     activeIndex.value = startIndex ?? (selected >= 0 ? selected : 0);
     open.value = true;
     // Focus moves to the listbox; the active option is conveyed via
@@ -239,8 +207,8 @@ async function closeList(refocus = true): Promise<void> {
 }
 
 function choose(index: number): void {
-    const code = props.locales[index];
-    if (code) setLocale(code);
+    const slug = props.themes[index];
+    if (slug) setTheme(slug);
     void closeList();
 }
 
@@ -254,10 +222,10 @@ function scrollActiveIntoView(): void {
 }
 
 function moveActive(delta: number): void {
-    if (props.locales.length === 0) return;
+    if (props.themes.length === 0) return;
     const next = Math.min(
         Math.max(activeIndex.value + delta, 0),
-        props.locales.length - 1,
+        props.themes.length - 1,
     );
     activeIndex.value = next;
     scrollActiveIntoView();
@@ -269,9 +237,9 @@ function runTypeahead(char: string): void {
     typeaheadTimer = setTimeout(() => (typeahead = ""), 500);
     const from = activeIndex.value < 0 ? 0 : activeIndex.value;
     // Search forward from the active option, wrapping once.
-    for (let n = 0; n < props.locales.length; n++) {
-        const i = (from + n) % props.locales.length;
-        if (labelFor(props.locales[i]).toLowerCase().startsWith(typeahead)) {
+    for (let n = 0; n < props.themes.length; n++) {
+        const i = (from + n) % props.themes.length;
+        if (labelFor(props.themes[i]).toLowerCase().startsWith(typeahead)) {
             activeIndex.value = i;
             scrollActiveIntoView();
             return;
@@ -293,7 +261,7 @@ function onButtonKeydown(event: KeyboardEvent): void {
             break;
         case "ArrowUp":
             event.preventDefault();
-            void openList(props.locales.length - 1);
+            void openList(props.themes.length - 1);
             break;
     }
 }
@@ -315,7 +283,7 @@ function onListKeydown(event: KeyboardEvent): void {
             break;
         case "End":
             event.preventDefault();
-            activeIndex.value = props.locales.length - 1;
+            activeIndex.value = props.themes.length - 1;
             scrollActiveIntoView();
             break;
         case "Enter":
@@ -363,7 +331,6 @@ onMounted(() => {
     document.addEventListener("click", onDocumentClick);
 
     let initial = current.value;
-
     if (!initial && props.storageKey) {
         try {
             initial = localStorage.getItem(props.storageKey) ?? "";
@@ -371,30 +338,21 @@ onMounted(() => {
             // ignore privacy errors
         }
     }
-
-    if (!initial && props.detectFromNavigator && typeof navigator !== "undefined") {
-        const navLangs =
-            navigator.languages && navigator.languages.length > 0
-                ? Array.from(navigator.languages)
-                : navigator.language
-                  ? [navigator.language]
-                  : [];
-        initial = matchNavigatorLanguage(navLangs, props.locales);
+    if (!initial && props.detectFromSystem) {
+        initial = matchSystemTheme(props.themes);
     }
-
     if (!initial) {
         initial =
             props.defaultValue ??
-            (props.locales.includes("en") ? "en" : props.locales[0]) ??
+            (props.themes.includes("light") ? "light" : props.themes[0]) ??
             "";
     }
-
     if (initial && initial !== current.value) {
         current.value = initial;
         emit("update:value", initial);
         return;
     }
-    if (initial) applyLocale(initial);
+    if (initial) applyTheme(initial);
 });
 
 onBeforeUnmount(() => {
@@ -406,7 +364,7 @@ onBeforeUnmount(() => {
 <template>
     <div
         ref="rootEl"
-        :class="`locale-chooser ${props.class}`.trim()"
+        :class="`theme-picker ${props.class}`.trim()"
         @focusout="onRootFocusOut"
     >
         <input type="hidden" :name="name" :value="current" />
@@ -414,7 +372,7 @@ onBeforeUnmount(() => {
         <button
             ref="buttonEl"
             type="button"
-            class="locale-chooser-button"
+            class="theme-picker-button"
             :aria-label="label"
             aria-haspopup="listbox"
             :aria-expanded="open ? 'true' : 'false'"
@@ -423,15 +381,15 @@ onBeforeUnmount(() => {
             @keydown="onButtonKeydown"
         >
             <slot v-bind="{ value: current, open, labelFor }">
-                <span class="locale-chooser-icon" aria-hidden="true">{{
-                    GLOBE_WITH_MERIDIANS
+                <span class="theme-picker-icon" aria-hidden="true">{{
+                    CIRCLE_WITH_RIGHT_HALF_BLACK
                 }}</span>
             </slot>
         </button>
 
         <ul
             ref="listEl"
-            class="locale-chooser-list"
+            class="theme-picker-list"
             :id="listId"
             role="listbox"
             :aria-label="label"
@@ -443,16 +401,15 @@ onBeforeUnmount(() => {
             @keydown="onListKeydown"
         >
             <li
-                v-for="(locale, i) in locales"
-                :key="locale"
-                class="locale-chooser-option"
+                v-for="(theme, i) in themes"
+                :key="theme"
+                class="theme-picker-option"
                 :id="optionId(i)"
                 role="option"
-                :aria-selected="locale === current ? 'true' : 'false'"
+                :aria-selected="theme === current ? 'true' : 'false'"
                 :data-active="i === activeIndex ? '' : undefined"
-                :lang="tagFor(locale)"
                 @click="choose(i)"
-            >{{ labelFor(locale) }}</li>
+            >{{ labelFor(theme) }}</li>
         </ul>
     </div>
 </template>

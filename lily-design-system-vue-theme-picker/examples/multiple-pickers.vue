@@ -1,5 +1,5 @@
 <!--
-    Example 7 — Multiple choosers in one page.
+    Example 7 — Multiple pickers in one page.
 
     Each select gets a distinct `name`. The `name` plays two roles:
       1. It is the <select> `name`, so the two controls don't share state.
@@ -16,7 +16,7 @@
 -->
 <script setup lang="ts">
 import { ref } from "vue";
-import ThemeChooser from "../ThemeChooser.vue";
+import ThemePicker from "../ThemePicker.vue";
 
 const regionA = ref<HTMLElement | null>(null);
 const regionB = ref<HTMLElement | null>(null);
@@ -24,7 +24,7 @@ const regionB = ref<HTMLElement | null>(null);
 
 <template>
     <section ref="regionA">
-        <ThemeChooser
+        <ThemePicker
             label="Region A theme"
             name="region-a"
             themes-url="/assets/themes/"
@@ -34,7 +34,7 @@ const regionB = ref<HTMLElement | null>(null);
     </section>
 
     <section ref="regionB">
-        <ThemeChooser
+        <ThemePicker
             label="Region B theme"
             name="region-b"
             themes-url="/assets/themes/"

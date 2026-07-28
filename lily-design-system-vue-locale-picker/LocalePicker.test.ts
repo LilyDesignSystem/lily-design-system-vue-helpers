@@ -2,12 +2,12 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { defineComponent, nextTick, ref } from "vue";
 
-import LocaleChooser, {
+import LocalePicker, {
     bcp47LocaleTag,
     isRtlLocale,
     localeName,
     matchNavigatorLanguage,
-} from "./LocaleChooser.vue";
+} from "./LocalePicker.vue";
 
 const LOCALES = ["en", "en_US", "fr", "fr_CA", "ar"];
 
@@ -26,7 +26,7 @@ function resetRoot(): void {
 const wrappers: VueWrapper<any>[] = [];
 
 function build(props: Record<string, unknown>, options: Record<string, unknown> = {}) {
-    const wrapper = mount(LocaleChooser, {
+    const wrapper = mount(LocalePicker, {
         props: { label: "Language", locales: LOCALES, ...props },
         attachTo: document.body,
         ...options,
@@ -37,9 +37,9 @@ function build(props: Record<string, unknown>, options: Record<string, unknown> 
 
 function parts(wrapper: VueWrapper<any>) {
     return {
-        button: wrapper.find("button.locale-chooser-button"),
-        list: wrapper.find("ul.locale-chooser-list"),
-        options: wrapper.findAll("li.locale-chooser-option"),
+        button: wrapper.find("button.locale-picker-button"),
+        list: wrapper.find("ul.locale-picker-list"),
+        options: wrapper.findAll("li.locale-picker-option"),
     };
 }
 
@@ -69,7 +69,7 @@ afterEach(() => {
     resetRoot();
 });
 
-describe("LocaleChooser — pure helpers (§7.2)", () => {
+describe("LocalePicker — pure helpers (§7.2)", () => {
     test("§7.7 bcp47LocaleTag converts en_US to en-US", () => {
         expect(bcp47LocaleTag("en_US")).toBe("en-US");
     });
@@ -115,7 +115,7 @@ describe("LocaleChooser — pure helpers (§7.2)", () => {
     });
 });
 
-describe("LocaleChooser — markup contract (§4.3, §7.1)", () => {
+describe("LocalePicker — markup contract (§4.3, §7.1)", () => {
     test("§7.1 renders a button that controls a listbox", () => {
         const wrapper = build({});
         const { button } = parts(wrapper);
@@ -131,16 +131,16 @@ describe("LocaleChooser — markup contract (§4.3, §7.1)", () => {
     test("§7.1 the root is a div carrying the class hook", () => {
         const wrapper = build({ class: "my-hook" });
         expect(wrapper.element.tagName).toBe("DIV");
-        expect(wrapper.classes()).toContain("locale-chooser");
+        expect(wrapper.classes()).toContain("locale-picker");
         expect(wrapper.classes()).toContain("my-hook");
     });
 
     test("§7.1 the button renders the globe glyph, hidden from assistive tech", () => {
         const wrapper = build({});
-        const icon = wrapper.find(".locale-chooser-icon");
+        const icon = wrapper.find(".locale-picker-icon");
         // U+1F310 GLOBE WITH MERIDIANS + U+FE0E VARIATION SELECTOR-15.
         // VS15 forces text presentation so the globe renders monochrome,
-        // matching theme-chooser's ◑ rather than the colour-emoji globe.
+        // matching theme-picker's ◑ rather than the colour-emoji globe.
         expect(icon.text()).toBe("\u{1F310}\uFE0E");
         expect(icon.attributes("aria-hidden")).toBe("true");
     });
@@ -212,7 +212,7 @@ describe("LocaleChooser — markup contract (§4.3, §7.1)", () => {
     });
 });
 
-describe("LocaleChooser — keyboard contract (APG listbox, §7.6)", () => {
+describe("LocalePicker — keyboard contract (APG listbox, §7.6)", () => {
     async function openWith(key: string) {
         const wrapper = build({});
         await flush();
@@ -363,7 +363,7 @@ describe("LocaleChooser — keyboard contract (APG listbox, §7.6)", () => {
     });
 });
 
-describe("LocaleChooser — locale application (§5.5, §7.3)", () => {
+describe("LocalePicker — locale application (§5.5, §7.3)", () => {
     test("§7.13 sets target.lang to the BCP 47 form of the resolved initial locale", async () => {
         build({ defaultValue: "en_US" });
         await flush();
@@ -391,14 +391,14 @@ describe("LocaleChooser — locale application (§5.5, §7.3)", () => {
 
     test("§7.16 selecting a different option updates lang, dir, and emits change", async () => {
         const Host = defineComponent({
-            components: { LocaleChooser },
+            components: { LocalePicker },
             setup() {
                 const locale = ref("");
                 const changes: string[] = [];
                 return { locale, changes };
             },
             template: `
-                <LocaleChooser
+                <LocalePicker
                     label="Language"
                     :locales="['en', 'en_US', 'fr', 'fr_CA', 'ar']"
                     default-value="en"
@@ -410,8 +410,8 @@ describe("LocaleChooser — locale application (§5.5, §7.3)", () => {
         const wrapper = mount(Host, { attachTo: document.body });
         wrappers.push(wrapper);
         await flush();
-        await wrapper.find("button.locale-chooser-button").trigger("click");
-        await wrapper.findAll("li.locale-chooser-option")[4].trigger("click");
+        await wrapper.find("button.locale-picker-button").trigger("click");
+        await wrapper.findAll("li.locale-picker-option")[4].trigger("click");
         await flush();
         expect(document.documentElement.lang).toBe("ar");
         expect(document.documentElement.dir).toBe("rtl");
@@ -445,7 +445,7 @@ describe("LocaleChooser — locale application (§5.5, §7.3)", () => {
     });
 });
 
-describe("LocaleChooser — initial-value resolution (§5.2, §5.3, §7.4)", () => {
+describe("LocalePicker — initial-value resolution (§5.2, §5.3, §7.4)", () => {
     test("§7.18 persists to localStorage and reads back on a fresh mount", async () => {
         const wrapper = build({ storageKey: "lily-locale" });
         await flush();
@@ -498,7 +498,7 @@ describe("LocaleChooser — initial-value resolution (§5.2, §5.3, §7.4)", () 
     });
 });
 
-describe("LocaleChooser — spread + custom slot (§4.1, §7.5)", () => {
+describe("LocalePicker — spread + custom slot (§4.1, §7.5)", () => {
     test("§7.22 extra attributes spread onto the root div", () => {
         const wrapper = build({}, { attrs: { "data-testid": "lp" } });
         expect(wrapper.element.tagName).toBe("DIV");
@@ -520,10 +520,10 @@ describe("LocaleChooser — spread + custom slot (§4.1, §7.5)", () => {
         );
         await flush();
         // The custom glyph replaces the default globe inside the button.
-        expect(wrapper.find("button.locale-chooser-button").text()).toContain(
+        expect(wrapper.find("button.locale-picker-button").text()).toContain(
             "custom glyph",
         );
-        expect(wrapper.find(".locale-chooser-icon").exists()).toBe(false);
+        expect(wrapper.find(".locale-picker-icon").exists()).toBe(false);
         expect(captured.open).toBe(false);
         expect(captured.value).toBe("fr");
         expect(captured.labelFor("en_US")).toBe("English (United States)");
@@ -543,7 +543,7 @@ describe("LocaleChooser — spread + custom slot (§4.1, §7.5)", () => {
             },
         );
         await flush();
-        await wrapper.find("button.locale-chooser-button").trigger("click");
+        await wrapper.find("button.locale-picker-button").trigger("click");
         await flush();
         expect(seen[0]).toBe(false);
         expect(seen[seen.length - 1]).toBe(true);

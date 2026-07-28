@@ -2,12 +2,12 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { h, nextTick } from "vue";
 
-import ShareChooser, {
+import SharePicker, {
     canCopy,
     canShareNatively,
     BLACK_RIGHTWARDS_ARROWHEAD,
     type ShareTarget,
-} from "./ShareChooser.vue";
+} from "./SharePicker.vue";
 
 const URL_UNDER_TEST = "https://example.test/article";
 
@@ -35,7 +35,7 @@ async function flush(): Promise<void> {
 const wrappers: VueWrapper<any>[] = [];
 
 function build(props: Record<string, unknown> = {}, options: Record<string, unknown> = {}) {
-    const wrapper = mount(ShareChooser, {
+    const wrapper = mount(SharePicker, {
         props: { label: "Share", targets: TARGETS, url: URL_UNDER_TEST, ...props },
         attachTo: document.body,
         ...options,
@@ -46,9 +46,9 @@ function build(props: Record<string, unknown> = {}, options: Record<string, unkn
 
 function parts(wrapper: VueWrapper<any>) {
     return {
-        button: wrapper.find("button.share-chooser-button"),
-        list: wrapper.find("ul.share-chooser-list"),
-        status: wrapper.find("p.share-chooser-status"),
+        button: wrapper.find("button.share-picker-button"),
+        list: wrapper.find("ul.share-picker-list"),
+        status: wrapper.find("p.share-picker-status"),
     };
 }
 
@@ -125,7 +125,7 @@ afterEach(() => {
     while (wrappers.length) wrappers.pop()?.unmount();
 });
 
-describe("ShareChooser — markup contract (§7.1–§7.6)", () => {
+describe("SharePicker — markup contract (§7.1–§7.6)", () => {
     test("§7.1 renders a disclosure button controlling a list", () => {
         const wrapper = build();
         const { button, list } = parts(wrapper);
@@ -141,7 +141,7 @@ describe("ShareChooser — markup contract (§7.1–§7.6)", () => {
 
     test("§7.1 the button renders ➤, hidden from assistive tech", () => {
         const wrapper = build();
-        const icon = wrapper.find(".share-chooser-icon");
+        const icon = wrapper.find(".share-picker-icon");
         // U+27A4 BLACK RIGHTWARDS ARROWHEAD
         expect(icon.text()).toBe("\u27A4");
         expect(BLACK_RIGHTWARDS_ARROWHEAD).toBe("\u27A4");
@@ -161,7 +161,7 @@ describe("ShareChooser — markup contract (§7.1–§7.6)", () => {
     test("§7.3 destinations are real links, not role=menuitem", async () => {
         const wrapper = build();
         await openList(wrapper);
-        const links = wrapper.findAll("a.share-chooser-target");
+        const links = wrapper.findAll("a.share-picker-target");
         expect(links.length).toBe(2);
         for (const a of links) {
             expect(a.element.tagName).toBe("A");
@@ -178,7 +178,7 @@ describe("ShareChooser — markup contract (§7.1–§7.6)", () => {
             targets: [TARGETS[0], { ...TARGETS[1], newTab: false }],
         });
         await openList(wrapper);
-        const links = wrapper.findAll("a.share-chooser-target");
+        const links = wrapper.findAll("a.share-picker-target");
         expect(links[0].attributes("target")).toBe("_blank");
         expect(links[1].attributes("target")).toBeUndefined();
         expect(links[1].attributes("rel")).toBe("noopener noreferrer");
@@ -187,7 +187,7 @@ describe("ShareChooser — markup contract (§7.1–§7.6)", () => {
     test("§7.4 each destination's href comes from its own href()", async () => {
         const wrapper = build({ title: "Hello" });
         await openList(wrapper);
-        const links = wrapper.findAll("a.share-chooser-target");
+        const links = wrapper.findAll("a.share-picker-target");
         expect(links[0].attributes("href")).toBe(
             `https://mastodon.test/share?url=${encodeURIComponent(URL_UNDER_TEST)}&text=${encodeURIComponent("Hello")}`,
         );
@@ -199,11 +199,11 @@ describe("ShareChooser — markup contract (§7.1–§7.6)", () => {
     test("§7.5 the copy item renders only when copyLabel is supplied", async () => {
         const bare = build();
         await openList(bare);
-        expect(bare.find(".share-chooser-copy").exists()).toBe(false);
+        expect(bare.find(".share-picker-copy").exists()).toBe(false);
 
         const withCopy = build({ copyLabel: "Copy link" });
         await openList(withCopy);
-        const copy = withCopy.find(".share-chooser-copy");
+        const copy = withCopy.find(".share-picker-copy");
         expect(copy.element.tagName).toBe("BUTTON");
         expect(copy.attributes("type")).toBe("button");
         expect(copy.text()).toBe("Copy link");
@@ -221,20 +221,20 @@ describe("ShareChooser — markup contract (§7.1–§7.6)", () => {
             { class: "mine" },
             { attrs: { "data-testid": "share", id: "root-id" } },
         );
-        const root = wrapper.find("div.share-chooser");
-        expect(root.classes()).toContain("share-chooser");
+        const root = wrapper.find("div.share-picker");
+        expect(root.classes()).toContain("share-picker");
         expect(root.classes()).toContain("mine");
         expect(root.attributes("data-testid")).toBe("share");
         expect(root.attributes("id")).toBe("root-id");
     });
 });
 
-describe("ShareChooser — copy to clipboard (§7.7–§7.10)", () => {
+describe("SharePicker — copy to clipboard (§7.7–§7.10)", () => {
     test("§7.7 copying writes the URL and emits copy", async () => {
         const clip = stubClipboard();
         const wrapper = build({ copyLabel: "Copy link" });
         await openList(wrapper);
-        await wrapper.find(".share-chooser-copy").trigger("click");
+        await wrapper.find(".share-picker-copy").trigger("click");
         await flush();
         expect(clip.writes).toEqual([URL_UNDER_TEST]);
         expect(wrapper.emitted("copy")).toEqual([[URL_UNDER_TEST]]);
@@ -245,7 +245,7 @@ describe("ShareChooser — copy to clipboard (§7.7–§7.10)", () => {
         const clip = stubClipboard();
         const wrapper = build({ copyLabel: "Copy link", copiedLabel: "Link copied" });
         await openList(wrapper);
-        await wrapper.find(".share-chooser-copy").trigger("click");
+        await wrapper.find(".share-picker-copy").trigger("click");
         await flush();
         expect(parts(wrapper).status.text()).toBe("Link copied");
         expect(parts(wrapper).list.element.hasAttribute("hidden")).toBe(true);
@@ -260,7 +260,7 @@ describe("ShareChooser — copy to clipboard (§7.7–§7.10)", () => {
             copyFailedLabel: "Could not copy",
         });
         await openList(wrapper);
-        await wrapper.find(".share-chooser-copy").trigger("click");
+        await wrapper.find(".share-picker-copy").trigger("click");
         await flush();
         expect(parts(wrapper).status.text()).toBe("Could not copy");
         expect(wrapper.emitted("copy")).toBeUndefined();
@@ -275,14 +275,14 @@ describe("ShareChooser — copy to clipboard (§7.7–§7.10)", () => {
             copyFailedLabel: "Could not copy",
         });
         await openList(wrapper);
-        await wrapper.find(".share-chooser-copy").trigger("click");
+        await wrapper.find(".share-picker-copy").trigger("click");
         await flush();
         expect(parts(wrapper).status.text()).toBe("Could not copy");
         expect(parts(wrapper).list.element.hasAttribute("hidden")).toBe(true);
     });
 });
 
-describe("ShareChooser — native share sheet (§7.11–§7.14)", () => {
+describe("SharePicker — native share sheet (§7.11–§7.14)", () => {
     test("§7.11 canShareNatively reflects navigator.share", () => {
         expect(canShareNatively()).toBe(false);
         const nat = stubNativeShare();
@@ -347,11 +347,11 @@ describe("ShareChooser — native share sheet (§7.11–§7.14)", () => {
     });
 });
 
-describe("ShareChooser — keyboard and dismissal (§7.15–§7.19)", () => {
+describe("SharePicker — keyboard and dismissal (§7.15–§7.19)", () => {
     function itemsOf(wrapper: VueWrapper<any>): HTMLElement[] {
         return Array.from(
             parts(wrapper).list.element.querySelectorAll<HTMLElement>(
-                ".share-chooser-target, .share-chooser-copy",
+                ".share-picker-target, .share-picker-copy",
             ),
         );
     }
@@ -377,7 +377,7 @@ describe("ShareChooser — keyboard and dismissal (§7.15–§7.19)", () => {
         const all = itemsOf(wrapper);
         expect(document.activeElement).toBe(all[all.length - 1]);
         expect((document.activeElement as HTMLElement).className).toContain(
-            "share-chooser-copy",
+            "share-picker-copy",
         );
     });
 
@@ -463,18 +463,18 @@ describe("ShareChooser — keyboard and dismissal (§7.15–§7.19)", () => {
     });
 });
 
-describe("ShareChooser — url resolution and custom glyph (§7.20–§7.22)", () => {
+describe("SharePicker — url resolution and custom glyph (§7.20–§7.22)", () => {
     test("§7.20 an explicit url prop wins", async () => {
         const wrapper = build();
         await openList(wrapper);
-        const href = wrapper.find(".share-chooser-target").attributes("href")!;
+        const href = wrapper.find(".share-picker-target").attributes("href")!;
         expect(href).toContain(encodeURIComponent(URL_UNDER_TEST));
     });
 
     test("§7.21 with no url prop it falls back to the current page URL", async () => {
         const wrapper = build({ url: undefined });
         await openList(wrapper);
-        const href = wrapper.find(".share-chooser-target").attributes("href")!;
+        const href = wrapper.find(".share-picker-target").attributes("href")!;
         expect(href).toContain(encodeURIComponent(location.href));
     });
 
@@ -509,9 +509,9 @@ describe("ShareChooser — url resolution and custom glyph (§7.20–§7.22)", (
         const custom = wrapper.find('[data-testid="custom"]');
         expect(custom.exists()).toBe(true);
         expect(custom.element.closest("button")?.className).toContain(
-            "share-chooser-button",
+            "share-picker-button",
         );
-        expect(wrapper.find(".share-chooser-icon").exists()).toBe(false);
+        expect(wrapper.find(".share-picker-icon").exists()).toBe(false);
         expect(custom.attributes("data-open")).toBe("false");
         expect(custom.attributes("data-url")).toBe(URL_UNDER_TEST);
     });
